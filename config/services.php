@@ -1,6 +1,10 @@
 <?php
 
 return [
+        'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'key' => env('SUPABASE_PUBLISHABLE_KEY'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

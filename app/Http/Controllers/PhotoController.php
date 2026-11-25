@@ -28,7 +28,7 @@ class PhotoController extends Controller
         $size = $file->getSize();
 
         // Generated name, public disk named on purpose
-        $path = $file->store('photos', 'public');
+        $path = $file->store('gallery', 'supabase');
 
         if ($path === false) {
             return back()->withInput()
@@ -44,20 +44,32 @@ class PhotoController extends Controller
             ]);
         } catch (\Throwable $e) {
             // Do not leave a file with no row
-            Storage::disk('public')->delete($path);
+            Storage::disk('supabase')->delete($path);
             throw $e;
         }
 
         return redirect()->route('photos.index')->with('status', 'Photo uploaded.');
     }
+public function image(Photo $photo)
+{
+    $disk = Storage::disk('supabase');
 
+    abort_unless($disk->exists($photo->path), 404);
+
+    return response($disk->get($photo->path))
+        ->header(
+            'Content-Type',
+            $disk->mimeType($photo->path) ?? 'application/octet-stream'
+        )
+        ->header('Cache-Control', 'private, max-age=3600');
+}
     public function destroy(Photo $photo)
     {
         try {
             DB::transaction(function () use ($photo) {
                 $photo->delete();
 
-                if (! Storage::disk('public')->delete($photo->path)) {
+                if (! Storage::disk('supabase')->delete($photo->path)) {
                     throw new \RuntimeException('File could not be deleted.');
                 }
             });
